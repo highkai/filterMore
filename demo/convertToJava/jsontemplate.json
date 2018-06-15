@@ -1,0 +1,245 @@
+{
+	"expandRow": 2,
+	"isCascade": true,
+	"searchBoxs": [{
+			"id": "CreatedTimeOne",
+			"title": "日期定义",
+			"type": "datetime",
+			"data": [{
+					"value": "0",
+					"text": "最近10分钟"
+				},
+				{
+					"value": "1",
+					"text": "最近半小时"
+				},
+				{
+					"value": "2",
+					"text": "最近1小时"
+				},
+				{
+					"value": "3",
+					"text": "今天"
+				},
+				{
+					"value": "4",
+					"text": "昨天"
+				},
+				{
+					"value": "5",
+					"text": "最近3天"
+				},
+				{
+					"value": "6",
+					"text": "最近7天"
+				},
+				{
+					"value": "7",
+					"text": "最近15天"
+				},
+				{
+					"value": "8",
+					"text": "最近30天"
+				}
+			],
+			"isShowAll": "false"
+		},
+		{
+			"id": "CreatedTime",
+			"title": "创建日期",
+			"type": "datetime",
+			"data": [{
+					"value": "0",
+					"text": "最近10分钟"
+				},
+				{
+					"value": "1",
+					"text": "最近半小时"
+				},
+				{
+					"value": "2",
+					"text": "最近1小时"
+				},
+				{
+					"value": "3",
+					"text": "今天"
+				},
+				{
+					"value": "4",
+					"text": "昨天"
+				},
+				{
+					"value": "5",
+					"text": "最近3天"
+				},
+				{
+					"value": "6",
+					"text": "最近7天"
+				},
+				{
+					"value": "7",
+					"text": "最近15天"
+				},
+				{
+					"value": "8",
+					"text": "最近30天"
+				}
+			]
+		},
+		{
+			"id": "Status_CustomDate",
+			"title": "任务状态",
+			"isMultiple": "true",
+			"data": [{
+					"value": "0",
+					"text": "运行"
+				},
+				{
+					"value": "1",
+					"text": "停止"
+				}
+			]
+		},
+		{
+			"id": "Createor_CustomDate",
+			"title": "创建人",
+			"data": [{
+					"value": "admin",
+					"text": "系统管理员"
+				},
+				{
+					"value": "zhangsan",
+					"text": "张三"
+				}
+			]
+		},
+		{
+			"id": "Regions",
+			"title": "区域",
+			"isMultiple": "true",
+			"data": [{
+					"value": "1",
+					"text": "东部"
+				},
+				{
+					"value": "2",
+					"text": "南部"
+				},
+				{
+					"value": "3",
+					"text": "西部"
+				},
+				{
+					"value": "4",
+					"text": "北部"
+				},
+				{
+					"value": "5",
+					"text": "中部"
+				},
+				{
+					"value": "6",
+					"text": "四海"
+				}
+			],
+			"fullData": [{
+					"value": "1",
+					"text": "东部"
+				},
+				{
+					"value": "2",
+					"text": "南部"
+				},
+				{
+					"value": "3",
+					"text": "西部"
+				},
+				{
+					"value": "4",
+					"text": "北部"
+				},
+				{
+					"value": "5",
+					"text": "中部"
+				},
+				{
+					"value": "6",
+					"text": "四海"
+				}
+			]
+		},
+		{
+			"id": "Provinces",
+			"title": "省份",
+			"parentId": "Regions",
+			"data": [
+
+			],
+			"fullData": [{
+					"value": "1",
+					"text": "江苏",
+					"parentId": "1"
+				},
+				{
+					"value": "2",
+					"text": "浙江",
+					"parentId": "1"
+				},
+				{
+					"value": "3",
+					"text": "福建",
+					"parentId": "1"
+				},
+				{
+					"value": "4",
+					"text": "广东",
+					"parentId": "2"
+				},
+				{
+					"value": "5",
+					"text": "广西",
+					"parentId": "2"
+				},
+				{
+					"value": "6",
+					"text": "云南",
+					"parentId": "2"
+				},
+				{
+					"value": "7",
+					"text": "西藏",
+					"parentId": "3"
+				},
+				{
+					"value": "8",
+					"text": "新疆",
+					"parentId": "3"
+				},
+				{
+					"value": "9",
+					"text": "内蒙古",
+					"parentId": "4"
+				}
+			]
+		},
+		{
+			"id": "Cities",
+			"title": "城市",
+			"parentId": "Provinces",
+			"data": [
+
+			],
+			"fullData": [{
+					"value": "1",
+					"text": "南京",
+					"parentId": "1"
+				},
+				{
+					"value": "2",
+					"text": "宁波",
+					"parentId": "1"
+				}
+			]
+		}
+	]
+}
