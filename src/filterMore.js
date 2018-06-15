@@ -106,6 +106,7 @@
                 //================↓↓↓高级选项↓↓↓================
                 //是否级联：默认为false,即每个选项之间不起级联绑定作用；为true时，设置了parentId的被关联控件的选项会相应变化。
                 "isCascade":false,
+                //================下面这三个参数是控制是否传列表数据到前端进行反向过滤的【暂时先设计在这儿，代码中没有实现这个逻辑】================
             	//是否被数据反选条件：仅用于查询结果数据源总量非常少的时候（实现购物网站的sku缺货效果，这种情况下的结果排列组合非常少）
             	//	默认为false，即条件单向过滤数据；
             	//	为true时，需要同时从后台返回结果数据到前台，并将受影响的过滤条件的字段全部包含。
@@ -116,6 +117,7 @@
                	"skuResults":[],
                 //已选结果集：通过过滤选项已经过滤好的结果集
                 "selectedSkuResults":[]
+                //================上面这三个参数是控制是否传列表数据到前端进行反向过滤的【暂时先设计在这儿，代码中没有实现这个逻辑】================
                	//================↑↑↑高级选项↑↑↑================
                };
 
@@ -326,17 +328,19 @@
 
             /**
              * [rebindSubControls 重新绑定子控件]
-             * @param  {[type]} subControls       [子控件集合（可能一个控件改变会改变几个控件）]
-             * @param  {[type]} itemId            [当前改变的控件ID]
-             * @param  {[type]} selectedParentIds [当前点击的控件已经选择的值（因为可能是多选）]
+             * @param  {[子控件数组]} subControls       [子控件集合（可能一个控件改变会改变几个控件）]
+             * @param  {[父控件ID]} itemId            [当前改变的控件ID]
+             * @param  {[父控件已选条件值]} selectedParentIds [当前点击的控件已经选择的值（因为可能是多选）]
              * @return {[type]}                   [无]
              */
              function rebindSubControls(subControls,itemId,selectedParentIds)
              {
+                //下面循环用来依次重新生成受影响的子控件
                 for(var i = 0 ;i<subControls.length;i++)
                 {
                     var subCtl = subControls[i];     
-                    subCtl.data=[];//清除子控件列表               
+                    subCtl.data=[];//清除子控件已选条件列表               
+                    //下面循环依次将父控件的已选条件值代入到子控件所有可选值【fullData，比如全国所有城市】中进行匹配，将能够匹配的值作为子控件的选项列表【data，比如选中的几个省（如江苏、浙江等）的城市】。
                     for(var j = 0 ;j<selectedParentIds.length;j++)
                     {
                         var parentId= selectedParentIds[j];
@@ -352,7 +356,11 @@
                     _reCreateCtrl(subCtl);
                 }
             }
-            /** [_reCreateCtrl 重画控件] */
+             /**
+              *   [_reCreateCtrl 重画控件]
+              * @param  {[searchBox对象]} item [用来指导程序怎么生成一个searchBox]
+              * @return {[void]}      [无]
+              */
             function _reCreateCtrl(item) {
                 var strHTML = "";         
                 $(settings.searchBoxs).each(function (i, itemi) {
