@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>fiterMore sku扩展测试页</title>
+	<link href="bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="mumayi_top/css/mumayi_top.css">
+	<link rel="stylesheet" href="../dist/css/filterMore.min.css">
+	<style>
+	body { padding-top: 70px; padding-left: 20px;padding-right: 20px;padding-bottom: 20px; }
+	.t-red{  color: red;  }
+	.w150{  width: 150px;  }
+	.w200{  width: 200px;  }
+	h1{
+		background: #2B6695;
+		border-radius: 6px 6px 6px 6px;
+		box-shadow: 0 0 0 1px #5F5A4B, 1px 1px 6px 1px rgba(10, 10, 0, 0.5);
+		color: #FFFFFF;
+		font-size: 17px;
+		font-weight: bold;
+		line-height: 25px;
+		margin: 15px 0 !important;
+		padding: 5px 0 5px 20px;
+		text-shadow: 2px 2px 3px #222222;
+	}
+	.pContent{font-size: 16px;text-indent: 2em;}
+</style>
+</head>
+<body>
+
+	<!-- Fixed navbar -->
+	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+		<div class="container">
+			<div id="navbar" class="navbar-collapse collapse">
+				<ul class="nav navbar-nav">
+					<li><a href="#main">filterMore</a></li>
+
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<h1 class="title" id="main">filterMore-扩展测试页</h1>
+	<h4 style="font-weight: bold;">目的</h4>
+	<p class="pContent"> filterMore是一款仿电商多条件栏位、多标签的查询筛选控件。
+
+	</p>
+	<h1>仿sku选择</h1>
+
+	<div class="searchbox" id="skuDemo_searchbox"></div>
+	<div id="skuDemo_searchbox_param">查询参数:[]</div>
+	<div id="footer"></div>
+
+	<div style="display: none;" id="rocket-to-top">
+		<div style="opacity:0;display: block;" class="level-2"></div>
+		<div class="level-3"></div>
+	</div>
+
+
+
+	<script src="jquery-1.11.1.min.js"></script>
+	<script src="layer/layer.min.js"></script>
+	<script src="layer/laydate/laydate.js"></script>
+	<script src="mumayi_top/mumayi_top.min.js"></script>
+	<script src="../src/filterMore.js"></script>
+
+	<script>
+		$(function () {			
+			initSkuDemo();
+		});
+
+
+		function initSkuDemo() {
+			var options = {
+            //查询事件
+            "search": function (paramList) {
+            	$("#skuDemo_searchbox_param").html('查询参数:'+JSON.stringify(paramList));
+            },
+            //默认展开条件数
+            "expandRow": 2,
+            "isCascade":true,
+            //查询条件
+            "searchBoxs": [
+            {
+            	"id": "CreatedTimeOne",
+            	"title": "日期定义",
+            	"type": "datetime",
+            	"data": [
+            	{ "value": "0", "text": "最近10分钟" },
+            	{ "value": "1", "text": "最近半小时"},
+            	{ "value": "2", "text": "最近1小时"},
+            	{ "value": "3", "text": "今天"},
+            	{ "value": "4", "text": "昨天"},
+            	{ "value": "5", "text": "最近3天"},
+            	{ "value": "6", "text": "最近7天"},
+            	{ "value": "7", "text": "最近15天" },
+            	{ "value": "8", "text": "最近30天"}
+                    ],"isShowAll": false,//是否显示全部
+                    "defaults": ['0'],
+                    "custom": {
+                    	"isRange": true,
+                    	'event': function (start, end) {
+                    		if (!start || !end || start > end) {
+                    			var id, tip ;
+                    			if (!start) {
+                    				tip = '开始日期必填';
+                    				id = "#searchitem_CreatedTimeOne_c_custom_start";
+                    			}
+                    			else if (!end) {
+                    				tip = '截止日期必填';
+                    				id = "#searchitem_CreatedTimeOne_c_custom_end";
+                    			} else {
+                    				tip = '截止日期必须大于开始日期';
+                    				id = "#searchitem_CreatedTimeOne_c_custom_end";
+                    			}
+                    			layer.tips(tip, id, {
+                    				tips: 3
+                    			});
+                    			return false;
+                    		}
+                    		else {
+                    			return true;
+                    		}
+                    	}
+                    }
+                },
+                {
+                	"id": "CreatedTime",
+                	"title": "创建日期",
+                	"type": "datetime",
+                	"data": [
+                	{ "value": "0", "text": "最近10分钟" },
+                	{ "value": "1", "text": "最近半小时"},
+                	{ "value": "2", "text": "最近1小时"},
+                	{ "value": "3", "text": "今天"},
+                	{ "value": "4", "text": "昨天"},
+                	{ "value": "5", "text": "最近3天"},
+                	{ "value": "6", "text": "最近7天"},
+                	{ "value": "7", "text": "最近15天" },
+                	{ "value": "8", "text": "最近30天"}
+                	],
+                	"custom": {
+                		'event': function (start, end) {
+                			console.log(start);
+                			console.log(end);
+                            //返回false不会触发查询事件
+                            return false;
+                        }
+                    }
+                },
+                {
+                	"id": "Status_CustomDate",
+                	"title": "任务状态",
+                	"isMultiple":true,
+                	"data": [
+                	{ "value": "0", "text": "运行" },
+                	{ "value": "1", "text": "停止" }
+                	]
+                },
+                {
+                	"id": "Createor_CustomDate",
+                	"title": "创建人",
+                	"data": [
+                	{ "value": "admin", "text": "系统管理员" },
+                	{ "value": "zhangsan", "text": "张三" }
+                	]
+                }                ,
+                {
+                	"id":"Regions",
+                	"title":"区域",
+                	"data":[
+	                	{"value":"1", "text" :"东部"},
+	                	{"value":"2", "text" :"南部"},
+	                	{"value":"3", "text" :"西部"},
+	                	{"value":"4", "text" :"北部"},
+	                	{"value":"5", "text" :"中部"},
+	                	{"value":"6", "text" :"四海"}
+                	],
+                	"fullData":[
+	                	{"value":"1", "text" :"东部"},
+	                	{"value":"2", "text" :"南部"},
+	                	{"value":"3", "text" :"西部"},
+	                	{"value":"4", "text" :"北部"},
+	                	{"value":"5", "text" :"中部"},
+	                	{"value":"6", "text" :"四海"}
+	                	],
+                },
+                {
+                	"id": "Provinces",
+                	"title": "省份",
+                	"parentId":"Regions",//级联控件ID，一般是上级控件
+                	"data": [
+
+                	],
+                	"fullData":[
+                	{ "value": "1", "text":  "江苏","parentId":"1" },
+                	{ "value": "2", "text":  "浙江","parentId":"1" },
+                	{ "value": "3", "text":  "福建","parentId":"1" },
+                	{ "value": "4", "text":  "广东","parentId":"2" },
+                	{ "value": "5", "text":  "广西","parentId":"2" },
+                	{ "value": "6", "text":  "云南","parentId":"2" },
+                	{ "value": "7", "text":  "西藏","parentId":"3" },
+                	{ "value": "8", "text":  "新疆","parentId":"3" },
+                	{ "value": "9", "text":  "内蒙古","parentId":"4" },
+                	]
+                } ,
+                {
+                	"id": "Cities",
+                	"title": "城市",
+                	"parentId":"Provinces",//级联控件ID，一般是上级控件
+                	"data": [
+                
+                	],
+                	"fullData": [
+                	{ "value": "1", "text": "南京","parentId":"1" },
+                	{ "value": "2", "text": "宁波","parentId":"1"  }
+                	]
+                }
+                ]
+            };
+            $("#skuDemo_searchbox").fiterMore(options);
+
+        //自定义日期搜索初始化
+        $("#searchitem_CreatedTimeOne_c_custom_start").addClass("form-control layer-date");
+        $("#searchitem_CreatedTimeOne_c_custom_end").addClass("form-control layer-date");
+        //日期范围限制
+        var start = {
+        	elem: '#searchitem_CreatedTimeOne_c_custom_start',
+        	format: 'YYYY-MM-DD hh:mm:ss',
+        	max: laydate.now(),
+        	istime: true,
+        	istoday: true
+        };
+        var end = {
+        	elem: '#searchitem_CreatedTimeOne_c_custom_end',
+        	format: 'YYYY-MM-DD hh:mm:ss',
+        	max: laydate.now(),
+        	istime: true,
+        	istoday: true
+        };
+        laydate(start);
+        laydate(end); 
+
+    }
+
+</script>
+</body>
+</html>

@@ -3,13 +3,13 @@
  * 创建人：  焰尾迭
  * 创建时间：2015-11-18
  */
-$.extend(String.prototype, {
+ $.extend(String.prototype, {
     /*
      * 功能：    类似C# String.Format()格式化功能
      * 参数：    args：参数
      * 返回值：  无
      */
-    format: function (args) {
+     format: function (args) {
         var result = this;
         if (arguments.length > 0) {
             if (arguments.length == 1 && typeof (args) == "object") {
@@ -42,7 +42,7 @@ $.extend(String.prototype, {
  @github: http://aui.github.com/fiterMore
  @License：LGPL
  */
-(function ($) {
+ (function ($) {
     $.fn.extend({
         /*
          * 功能：    互联网风格筛选条件插件
@@ -61,20 +61,22 @@ $.extend(String.prototype, {
                                  "valueField":"value", //选项json 键字段名称 默认为value
                                  "textField":"text",   //选项json 值字段名称 默认为text
                                  "data": [{value:1,text:'语文'},{value:2,text:'数学'}],  //选项数据
+                                 "fullData":[{value:1,text:'语文',parentId:2},{value:2,text:'数学',parentId:3}],//全部选项
                                  "isShowAll": false,//是否显示全部
                                  "defaults": ['0'], //默认选中值，没有则选中全部
                                  //自定义
                                  "custom": {
                                      "isRange": true, //是否区间 默认为true
                                      'event': function (start, end) { }
-                                 }
+                                 },
+                                 "parentId":"cascadedControlId",//级联控件ID，一般是上级控件
                              }]
                          }
          * 返回值：  无
          * 创建人：  焰尾迭
          * 创建时间：2015-12-21
          */
-        fiterMore: function (options) {
+         fiterMore: function (options) {
             //展开收缩有回调事件时，默认最大展示条数
             var MAX_SHOW_COUNT = 10;
             //id前缀
@@ -100,8 +102,22 @@ $.extend(String.prototype, {
                 //参数收集时自定义条件返回值的Key
                 "paramCustomkey": "CustomList",
                 //点击选项时是否立即进行查询 默认为true
-                "searchOnSelect": true
-            };
+                "searchOnSelect": true,
+                //================↓↓↓高级选项↓↓↓================
+                //是否级联：默认为false,即每个选项之间不起级联绑定作用；为true时，设置了parentId的被关联控件的选项会相应变化。
+                "isCascade":false,
+            	//是否被数据反选条件：仅用于查询结果数据源总量非常少的时候（实现购物网站的sku缺货效果，这种情况下的结果排列组合非常少）
+            	//	默认为false，即条件单向过滤数据；
+            	//	为true时，需要同时从后台返回结果数据到前台，并将受影响的过滤条件的字段全部包含。
+            	//		1、每次条件变化时，根据已选条件，过滤出数据
+            	//		2、根据过滤出的数据，disable掉没有匹配结果的选项（即购物网站上的缺货sku变灰效果）            	
+                "isAffectedBySkuResult":false,
+               	//待选结果集：用来反选上面选项的数据项
+               	"skuResults":[],
+                //已选结果集：通过过滤选项已经过滤好的结果集
+                "selectedSkuResults":[]
+               	//================↑↑↑高级选项↑↑↑================
+               };
 
             //查询控件参数
             var settings = $.extend(defaults, options);
@@ -175,12 +191,17 @@ $.extend(String.prototype, {
             //给选项添加了自定义事件 select 对外调用
             searchCtl.on("click select", ".filter_option span", function (e) {
                 var item = _getItem(this);
+                var itemId = _getItemId(this);
                 var index = $(this).attr("data-id");
-                //当前操作状态 select:当前元素选中 cancel:当前元素取消选中 cancelall:全部  selectremove:当前元素选中 其它元素移除选中 单选
+                //当前操作状态 
+                //  select              :当前元素选中 
+                //  cancel              :当前元素取消选中 
+                //  cancelall           :全部  
+                //  selectremove        :当前元素选中,其它元素移除选中 单选
                 var state = "select";
 
                 if (item.isMultiple == false || $(this).hasClass("option_all")) {
-                    //单选
+                    //单选 【将点击标签设置已选中，同时反选其他标签】
                     $(this).addClass("selected").siblings("span").removeClass("selected");
 
                     item.selected = [];
@@ -223,6 +244,22 @@ $.extend(String.prototype, {
                 //选择项触发回调事件
                 if (typeof (item.onSelect) == "function" && e.type == "click") {
                     item.onSelect(item.data[index], state);
+                }
+
+                //如果允许级联条件，则需要选择该控件的级联子控件。
+                if(settings.isCascade)
+                {
+                    var subControls = [];
+                    for ( var i=0,length =settings.searchBoxs.length; i<length;i++)
+                    {
+                        if(!!settings.searchBoxs[i].parentId && settings.searchBoxs[i].parentId==itemId)
+                        {
+                            subControls.push(settings.searchBoxs[i]);
+                        }
+                    }
+
+                    rebindSubControls( subControls, itemId, item.selected);
+
                 }
 
                 //触发查询事件
@@ -287,6 +324,62 @@ $.extend(String.prototype, {
                 }
             });
 
+            /**
+             * [rebindSubControls 重新绑定子控件]
+             * @param  {[type]} subControls       [子控件集合（可能一个控件改变会改变几个控件）]
+             * @param  {[type]} itemId            [当前改变的控件ID]
+             * @param  {[type]} selectedParentIds [当前点击的控件已经选择的值（因为可能是多选）]
+             * @return {[type]}                   [无]
+             */
+             function rebindSubControls(subControls,itemId,selectedParentIds)
+             {
+                for(var i = 0 ;i<subControls.length;i++)
+                {
+                    var subCtl = subControls[i];     
+                    subCtl.data=[];//清除子控件列表               
+                    for(var j = 0 ;j<selectedParentIds.length;j++)
+                    {
+                        var parentId= selectedParentIds[j];
+                        for(var k=0;k<subCtl.fullData.length;k++)
+                        {
+                            if(!!subCtl.fullData[k].parentId && subCtl.fullData[k].parentId==parentId)
+                            {
+                                subCtl.data.push(subCtl.fullData[k]);
+                            }
+                        }
+                    }
+                    //重新创建关联子控件
+                    _reCreateCtrl(subCtl);
+                }
+            }
+            /** [_reCreateCtrl 重画控件] */
+            function _reCreateCtrl(item) {
+                var strHTML = "";         
+                $(settings.searchBoxs).each(function (i, itemi) {
+                    if (itemi.id == item.id) {
+                        strHTML += ('<div class="searchbox-item" {0} data-id="{1}" id="{2}">'.format((i + 1) == settings.searchBoxs.length ? 'style="border: 0"' : "", i, item.id) +
+                            '<div class="l" id="{1}_l">{0}<i></i></div>'.format(item.title, item.id) +
+                            '<div class="c" id="{0}_c">'.format(item.id) +
+                            '<div class="control-type">({0})</div><div class="filter_option" style="padding-right:{1}px;">'.format(item.isMultiple ? "多选" : "单选", _getCustomDivWidth(item) + 20) + _createOptions(item) +
+                            '</div>' + _createCustomFilter(i, item) +
+                            '</div>' +
+                            '<a href="javascript:;" class="r" id="{0}_r"><span class="text">展开</span></a>'.format(item.id) +
+                            '</div>');
+                    }
+                });
+                $("#" + item.id).replaceWith(strHTML);
+                //同时需要清除原来这个条件的已选项。
+                item.selected = [];
+                //清空自定义查询默认值
+                _clearCustomValue(item);
+                $(".searchbox .searchbox-item").each(function (i) {
+                    var height = $(this).find(".filter_option").outerHeight();
+                    if (height <= 30) {
+                        $(this).find(".r").remove();
+                    }
+                });
+            }
+
             ////////////////////////////////////////私有方法////////////////////////////////////////
             /*
              * 功能：    根据数据初始化查询控件
@@ -295,18 +388,18 @@ $.extend(String.prototype, {
              * 创建人：  杜冬军
              * 创建时间：2015-12-21
              */
-            function _createCtrl() {
+             function _createCtrl() {
                 var strHTML = "";
 
                 $(settings.searchBoxs).each(function (i, item) {
                     strHTML += ('<div class="searchbox-item" {0} data-id="{1}" id="{2}">'.format((i + 1) == settings.searchBoxs.length ? 'style="border: 0"' : "", i, item.id) +
-                    '<div class="l" id="{1}_l">{0}<i></i></div>'.format(item.title, item.id) +
-                    '<div class="c" id="{0}_c">'.format(item.id) +
-                    '<div class="control-type">({0})</div><div class="filter_option" style="padding-right:{1}px;">'.format(item.isMultiple ? "多选" : "单选", _getCustomDivWidth(item) + 20) + _createOptions(item) +
-                    '</div>' + _createCustomFilter(i, item) +
-                    '</div>' +
-                    '<a href="javascript:;" class="r" id="{0}_r"><span class="text">展开</span></a>'.format(item.id) +
-                    '</div>');
+                        '<div class="l" id="{1}_l">{0}<i></i></div>'.format(item.title, item.id) +
+                        '<div class="c" id="{0}_c">'.format(item.id) +
+                        '<div class="control-type">({0})</div><div class="filter_option" style="padding-right:{1}px;">'.format(item.isMultiple ? "多选" : "单选", _getCustomDivWidth(item) + 20) + _createOptions(item) +
+                        '</div>' + _createCustomFilter(i, item) +
+                        '</div>' +
+                        '<a href="javascript:;" class="r" id="{0}_r"><span class="text">展开</span></a>'.format(item.id) +
+                        '</div>');
                 });
 
                 searchCtl.html(strHTML);
@@ -316,7 +409,7 @@ $.extend(String.prototype, {
                         $(this).find(".r").remove();
                     }
                 });
-                //如果默认展开行数小于总条数
+                //如果默认展开行数小于总条数,则将搜索条件之后放置【展开条件】按钮
                 if (settings.expandRow < settings.searchBoxs.length) {
                     searchCtl.after(filterBtn);
                 }
@@ -394,7 +487,7 @@ $.extend(String.prototype, {
                     if (item.custom.isRange) {
                         //范围
                         strHTML += '<span>—</span>' +
-                            '<span><input type="text" id="{0}_c_custom_end" {1}></span>'.format(item.id, inputwidth ? "style='width:{0}'".format(inputwidth) : "");
+                        '<span><input type="text" id="{0}_c_custom_end" {1}></span>'.format(item.id, inputwidth ? "style='width:{0}'".format(inputwidth) : "");
                     }
                     strHTML += '<span class="btn_filter_sure" data-id="{0}">确定</span></div>'.format(i);
                     return strHTML;
@@ -403,9 +496,14 @@ $.extend(String.prototype, {
                 }
             }
 
-            //获取当前查询框ID
+            //获取当前查询框顺序
             function _getItemIndex(objthis) {
                 return $(objthis).closest('.searchbox-item').attr("data-id");
+            }
+
+            //获取当前查询框ID
+            function _getItemId(objthis) {
+                return  $(objthis).closest('.searchbox-item').attr("id").replace('searchitem_','');                
             }
 
             /*
@@ -415,7 +513,7 @@ $.extend(String.prototype, {
              * 创建人：  杜冬军
              * 创建时间：2015-12-21
              */
-            function _getItem(objthis) {
+             function _getItem(objthis) {
                 var index = _getItemIndex(objthis);
                 return settings.searchBoxs[index];
             }
@@ -427,7 +525,7 @@ $.extend(String.prototype, {
              * 创建人：  杜冬军
              * 创建时间：2015-12-24
              */
-            function _getParamList() {
+             function _getParamList() {
                 var paramList = [];
                 var value = null;
                 $(settings.searchBoxs).each(function (i, item) {
@@ -454,7 +552,7 @@ $.extend(String.prototype, {
              * 创建人：  杜冬军
              * 创建时间：2015-12-21
              */
-            function _isHasExpandEvent(item) {
+             function _isHasExpandEvent(item) {
                 return item.expand && (typeof (item.expand.event) == "function");
             }
 
@@ -467,7 +565,7 @@ $.extend(String.prototype, {
              * 创建人：  杜冬军
              * 创建时间：2015-12-21
              */
-            function _itemExpand(event, that, data) {
+             function _itemExpand(event, that, data) {
                 event.cancelBubble = true;
 
                 var state = _getExpandState(that);
@@ -518,9 +616,9 @@ $.extend(String.prototype, {
                  * 创建人：  杜冬军
                  * 创建时间：2015-12-25
                  */
-                function _changeState(that, dataid, state) {
+                 function _changeState(that, dataid, state) {
 
-                }
+                 }
 
                 /*
                  * 功能：    获取当前展开收缩按钮状态
@@ -529,7 +627,7 @@ $.extend(String.prototype, {
                  * 创建人：  杜冬军
                  * 创建时间：2015-12-21
                  */
-                function _getExpandState(obj) {
+                 function _getExpandState(obj) {
                     var objText = $(obj).find(".text");
                     if (objText.text()=='展开') {
                         return "expand";
@@ -546,7 +644,7 @@ $.extend(String.prototype, {
              * 创建人：  杜冬军
              * 创建时间：2015-12-25
              */
-            function _clearCustomValue(item) {
+             function _clearCustomValue(item) {
                 if (item.custom && item.customSelectd.length > 0) {
                     item.customSelectd = [];
                     //清除输入框的值
@@ -565,7 +663,7 @@ $.extend(String.prototype, {
              * 创建人：  杜冬军
              * 创建时间：2015-12-25
              */
-            function _setCustomValue(item) {
+             function _setCustomValue(item) {
                 if (item.custom && item.customSelectd.length > 0) {
                     //清除输入框的值
                     $("#{0}_c_custom_start".format(item.id)).val(item.customSelectd[0]);
@@ -583,7 +681,7 @@ $.extend(String.prototype, {
              * 创建人：  杜冬军
              * 创建时间：2016-09-08
              */
-            function _setSearchValue(arrOptionValue) {
+             function _setSearchValue(arrOptionValue) {
                 if ($.isArray(arrOptionValue)) {
                     var jsonMapper = {}, itemSet = null;
                     for (var i = 0, length = arrOptionValue.length; i < length; i++) {
@@ -659,7 +757,7 @@ $.extend(String.prototype, {
          * 创建人：  杜冬军
          * 创建时间：2015-12-24
          */
-        getParamList: function () {
+         getParamList: function () {
             var that = this[0];
             if (that.isFiterMore) {
                 return that.getParamList();
@@ -672,7 +770,7 @@ $.extend(String.prototype, {
          * 创建人：  杜冬军
          * 创建时间：2016-09-08
          */
-        searchFunctionCall: function (options) {
+         searchFunctionCall: function (options) {
             if ($.isPlainObject(options)) {
                 var that = this[0];
                 if (that.isFiterMore) {
