@@ -3,13 +3,13 @@
  * 创建人：  焰尾迭
  * 创建时间：2015-11-18
  */
- $.extend(String.prototype, {
+$.extend(String.prototype, {
     /*
      * 功能：    类似C# String.Format()格式化功能
      * 参数：    args：参数
      * 返回值：  无
      */
-     format: function (args) {
+    format: function (args) {
         var result = this;
         if (arguments.length > 0) {
             if (arguments.length == 1 && typeof (args) == "object") {
@@ -42,7 +42,7 @@
  @github: http://aui.github.com/fiterMore
  @License：LGPL
  */
- (function ($) {
+(function ($) {
     $.fn.extend({
         /*
          * 功能：    互联网风格筛选条件插件
@@ -76,7 +76,7 @@
          * 创建人：  焰尾迭
          * 创建时间：2015-12-21
          */
-         fiterMore: function (options) {
+        fiterMore: function (options) {
             //展开收缩有回调事件时，默认最大展示条数
             var MAX_SHOW_COUNT = 10;
             //id前缀
@@ -105,21 +105,21 @@
                 "searchOnSelect": true,
                 //================↓↓↓高级选项↓↓↓================
                 //是否级联：默认为false,即每个选项之间不起级联绑定作用；为true时，设置了parentId的被关联控件的选项会相应变化。
-                "isCascade":false,
+                "isCascade": false,
                 //================下面这三个参数是控制是否传列表数据到前端进行反向过滤的【暂时先设计在这儿，代码中没有实现这个逻辑】================
-            	//是否被数据反选条件：仅用于查询结果数据源总量非常少的时候（实现购物网站的sku缺货效果，这种情况下的结果排列组合非常少）
-            	//	默认为false，即条件单向过滤数据；
-            	//	为true时，需要同时从后台返回结果数据到前台，并将受影响的过滤条件的字段全部包含。
-            	//		1、每次条件变化时，根据已选条件，过滤出数据
-            	//		2、根据过滤出的数据，disable掉没有匹配结果的选项（即购物网站上的缺货sku变灰效果）            	
-                "isAffectedBySkuResult":false,
-               	//待选结果集：用来反选上面选项的数据项
-               	"skuResults":[],
+                //是否被数据反选条件：仅用于查询结果数据源总量非常少的时候（实现购物网站的sku缺货效果，这种情况下的结果排列组合非常少）
+                //	默认为false，即条件单向过滤数据；
+                //	为true时，需要同时从后台返回结果数据到前台，并将受影响的过滤条件的字段全部包含。
+                //		1、每次条件变化时，根据已选条件，过滤出数据
+                //		2、根据过滤出的数据，disable掉没有匹配结果的选项（即购物网站上的缺货sku变灰效果）            	
+                "isAffectedBySkuResult": false,
+                //待选结果集：用来反选上面选项的数据项
+                "skuResults": [],
                 //已选结果集：通过过滤选项已经过滤好的结果集
-                "selectedSkuResults":[]
+                "selectedSkuResults": []
                 //================上面这三个参数是控制是否传列表数据到前端进行反向过滤的【暂时先设计在这儿，代码中没有实现这个逻辑】================
-               	//================↑↑↑高级选项↑↑↑================
-               };
+                //================↑↑↑高级选项↑↑↑================
+            };
 
             //查询控件参数
             var settings = $.extend(defaults, options);
@@ -249,20 +249,18 @@
                 }
 
                 //如果允许级联条件，则需要选择该控件的级联子控件。
-                if(settings.isCascade)
-                {
+                if (settings.isCascade) {
                     var subControls = [];
-                    for ( var i=0,length =settings.searchBoxs.length; i<length;i++)
-                    {
-                        if(!!settings.searchBoxs[i].parentId && settings.searchBoxs[i].parentId==itemId)
-                        {
+                    for (var i = 0, length = settings.searchBoxs.length; i < length; i++) {
+                        if (!!settings.searchBoxs[i].parentId && settings.searchBoxs[i].parentId.indexOf('|' + itemId + '|') >= 0) {
                             subControls.push(settings.searchBoxs[i]);
                         }
                     }
-
-                    rebindSubControls( subControls, itemId, item.selected);
-
+                    filterSubControls(subControls);
+                    //rebindSubControls(subControls, itemId, item.selected);
                 }
+
+
 
                 //触发查询事件
                 if (typeof (settings.search) == "function" && settings.searchOnSelect) {
@@ -326,6 +324,37 @@
                 }
             });
 
+            function filterSubControls(subControls) {
+                //下面循环用来依次重新生成受影响的子控件
+                for (var i = 0; i < subControls.length; i++) {
+                    var subCtl = subControls[i];
+                    subCtl.data = subCtl.fullData.concat();//清除子控件已选条件列表               
+                    for (var l = 0; l < settings.searchBoxs.length; l++) {
+                        var parentCtrl = settings.searchBoxs[l];
+                        if (parentCtrl.id != subCtl.id) {
+                            var itemId = parentCtrl.id.replace("searchitem_", "");
+                            var selectedParentIds = parentCtrl.selected;
+                            if (!!selectedParentIds && selectedParentIds.length > 0) {
+                                console.log(itemId + ' ' + selectedParentIds);
+                                for (var k = 0; k < subCtl.data.length; k++) {
+                                    console.log("subCtl Parentid " + subCtl.data[k][itemId]);
+                                    if (!!subCtl.data[k][itemId]) {
+                                        if ($.inArray(subCtl.data[k][itemId], selectedParentIds) < 0) {
+                                            console.log(subCtl.data[k]);
+                                            subCtl.data.splice(k, 1);
+                                            k = k - 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    //重新创建关联子控件
+                    _reCreateCtrl(subCtl);
+                }
+            }
+
             /**
              * [rebindSubControls 重新绑定子控件]
              * @param  {[子控件数组]} subControls       [子控件集合（可能一个控件改变会改变几个控件）]
@@ -333,36 +362,34 @@
              * @param  {[父控件已选条件值]} selectedParentIds [当前点击的控件已经选择的值（因为可能是多选）]
              * @return {[type]}                   [无]
              */
-             function rebindSubControls(subControls,itemId,selectedParentIds)
-             {
+            function rebindSubControls(subControls, itemId, selectedParentIds) {
                 //下面循环用来依次重新生成受影响的子控件
-                for(var i = 0 ;i<subControls.length;i++)
-                {
-                    var subCtl = subControls[i];     
-                    subCtl.data=[];//清除子控件已选条件列表               
+                for (var i = 0; i < subControls.length; i++) {
+                    var subCtl = subControls[i];
+                    subCtl.data = [];//清除子控件已选条件列表               
                     //下面循环依次将父控件的已选条件值代入到子控件所有可选值【fullData，比如全国所有城市】中进行匹配，将能够匹配的值作为子控件的选项列表【data，比如选中的几个省（如江苏、浙江等）的城市】。
-                    for(var j = 0 ;j<selectedParentIds.length;j++)
-                    {
-                        var parentId= selectedParentIds[j];
-                        for(var k=0;k<subCtl.fullData.length;k++)
-                        {
-                            if(!!subCtl.fullData[k].parentId && subCtl.fullData[k].parentId==parentId)
-                            {
+                    for (var j = 0; j < selectedParentIds.length; j++) {
+                        var parentId = selectedParentIds[j];
+                        for (var k = 0; k < subCtl.fullData.length; k++) {
+                            if (!!subCtl.fullData[k][itemId] && subCtl.fullData[k][itemId] == parentId) {
                                 subCtl.data.push(subCtl.fullData[k]);
                             }
                         }
                     }
+
                     //重新创建关联子控件
                     _reCreateCtrl(subCtl);
                 }
             }
-             /**
-              *   [_reCreateCtrl 重画控件]
-              * @param  {[searchBox对象]} item [用来指导程序怎么生成一个searchBox]
-              * @return {[void]}      [无]
-              */
+
+
+            /**
+             *   [_reCreateCtrl 重画控件]
+             * @param  {[searchBox对象]} item [用来指导程序怎么生成一个searchBox]
+             * @return {[void]}      [无]
+             */
             function _reCreateCtrl(item) {
-                var strHTML = "";         
+                var strHTML = "";
                 $(settings.searchBoxs).each(function (i, itemi) {
                     if (itemi.id == item.id) {
                         strHTML += ('<div class="searchbox-item" {0} data-id="{1}" id="{2}">'.format((i + 1) == settings.searchBoxs.length ? 'style="border: 0"' : "", i, item.id) +
@@ -396,7 +423,7 @@
              * 创建人：  杜冬军
              * 创建时间：2015-12-21
              */
-             function _createCtrl() {
+            function _createCtrl() {
                 var strHTML = "";
 
                 $(settings.searchBoxs).each(function (i, item) {
@@ -495,7 +522,7 @@
                     if (item.custom.isRange) {
                         //范围
                         strHTML += '<span>—</span>' +
-                        '<span><input type="text" id="{0}_c_custom_end" {1}></span>'.format(item.id, inputwidth ? "style='width:{0}'".format(inputwidth) : "");
+                            '<span><input type="text" id="{0}_c_custom_end" {1}></span>'.format(item.id, inputwidth ? "style='width:{0}'".format(inputwidth) : "");
                     }
                     strHTML += '<span class="btn_filter_sure" data-id="{0}">确定</span></div>'.format(i);
                     return strHTML;
@@ -511,7 +538,7 @@
 
             //获取当前查询框ID
             function _getItemId(objthis) {
-                return  $(objthis).closest('.searchbox-item').attr("id").replace('searchitem_','');                
+                return $(objthis).closest('.searchbox-item').attr("id").replace('searchitem_', '');
             }
 
             /*
@@ -521,7 +548,7 @@
              * 创建人：  杜冬军
              * 创建时间：2015-12-21
              */
-             function _getItem(objthis) {
+            function _getItem(objthis) {
                 var index = _getItemIndex(objthis);
                 return settings.searchBoxs[index];
             }
@@ -533,7 +560,7 @@
              * 创建人：  杜冬军
              * 创建时间：2015-12-24
              */
-             function _getParamList() {
+            function _getParamList() {
                 var paramList = [];
                 var value = null;
                 $(settings.searchBoxs).each(function (i, item) {
@@ -560,7 +587,7 @@
              * 创建人：  杜冬军
              * 创建时间：2015-12-21
              */
-             function _isHasExpandEvent(item) {
+            function _isHasExpandEvent(item) {
                 return item.expand && (typeof (item.expand.event) == "function");
             }
 
@@ -573,7 +600,7 @@
              * 创建人：  杜冬军
              * 创建时间：2015-12-21
              */
-             function _itemExpand(event, that, data) {
+            function _itemExpand(event, that, data) {
                 event.cancelBubble = true;
 
                 var state = _getExpandState(that);
@@ -624,9 +651,9 @@
                  * 创建人：  杜冬军
                  * 创建时间：2015-12-25
                  */
-                 function _changeState(that, dataid, state) {
+                function _changeState(that, dataid, state) {
 
-                 }
+                }
 
                 /*
                  * 功能：    获取当前展开收缩按钮状态
@@ -635,9 +662,9 @@
                  * 创建人：  杜冬军
                  * 创建时间：2015-12-21
                  */
-                 function _getExpandState(obj) {
+                function _getExpandState(obj) {
                     var objText = $(obj).find(".text");
-                    if (objText.text()=='展开') {
+                    if (objText.text() == '展开') {
                         return "expand";
                     } else {
                         return "collaspe";
@@ -652,7 +679,7 @@
              * 创建人：  杜冬军
              * 创建时间：2015-12-25
              */
-             function _clearCustomValue(item) {
+            function _clearCustomValue(item) {
                 if (item.custom && item.customSelectd.length > 0) {
                     item.customSelectd = [];
                     //清除输入框的值
@@ -671,7 +698,7 @@
              * 创建人：  杜冬军
              * 创建时间：2015-12-25
              */
-             function _setCustomValue(item) {
+            function _setCustomValue(item) {
                 if (item.custom && item.customSelectd.length > 0) {
                     //清除输入框的值
                     $("#{0}_c_custom_start".format(item.id)).val(item.customSelectd[0]);
@@ -689,7 +716,7 @@
              * 创建人：  杜冬军
              * 创建时间：2016-09-08
              */
-             function _setSearchValue(arrOptionValue) {
+            function _setSearchValue(arrOptionValue) {
                 if ($.isArray(arrOptionValue)) {
                     var jsonMapper = {}, itemSet = null;
                     for (var i = 0, length = arrOptionValue.length; i < length; i++) {
@@ -719,7 +746,7 @@
                                 for (var i = 0; i < valueList.length; i++) {
                                     itemSpans.filter("[data-value='{0}']".format(valueList[i])).addClass("selected");
                                     item.selected.push(valueList[i]);
-                                    if(!item.isMultiple){
+                                    if (!item.isMultiple) {
                                         break;
                                     }
                                 }
@@ -765,7 +792,7 @@
          * 创建人：  杜冬军
          * 创建时间：2015-12-24
          */
-         getParamList: function () {
+        getParamList: function () {
             var that = this[0];
             if (that.isFiterMore) {
                 return that.getParamList();
@@ -778,7 +805,7 @@
          * 创建人：  杜冬军
          * 创建时间：2016-09-08
          */
-         searchFunctionCall: function (options) {
+        searchFunctionCall: function (options) {
             if ($.isPlainObject(options)) {
                 var that = this[0];
                 if (that.isFiterMore) {

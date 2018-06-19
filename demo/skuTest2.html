@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>fiterMore sku扩展测试页</title>
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="mumayi_top/css/mumayi_top.css">
+    <link rel="stylesheet" href="../dist/css/filterMore.min.css">
+    <style>
+        body {
+            padding-top: 70px;
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 20px;
+        }
+
+        .t-red {
+            color: red;
+        }
+
+        .w150 {
+            width: 150px;
+        }
+
+        .w200 {
+            width: 200px;
+        }
+
+        h1 {
+            background: #2B6695;
+            border-radius: 6px 6px 6px 6px;
+            box-shadow: 0 0 0 1px #5F5A4B, 1px 1px 6px 1px rgba(10, 10, 0, 0.5);
+            color: #FFFFFF;
+            font-size: 17px;
+            font-weight: bold;
+            line-height: 25px;
+            margin: 15px 0 !important;
+            padding: 5px 0 5px 20px;
+            text-shadow: 2px 2px 3px #222222;
+        }
+
+        .pContent {
+            font-size: 16px;
+            text-indent: 2em;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="#main">filterMore</a></li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <h1 class="title" id="main">filterMore-扩展测试页</h1>
+    <h4 style="font-weight: bold;">目的</h4>
+    <p class="pContent">
+        filterMore是一款仿电商多条件栏位、多标签的查询筛选控件。
+
+    </p>
+    <h1>仿sku选择</h1>
+
+    <div class="searchbox" id="skuDemo_searchbox"></div>
+    <div id="skuDemo_searchbox_param">查询参数:[]</div>
+    <div id="footer"></div>
+
+    <div style="display: none;" id="rocket-to-top">
+        <div style="opacity:0;display: block;" class="level-2"></div>
+        <div class="level-3"></div>
+    </div>
+
+
+
+    <script src="jquery-1.11.1.min.js"></script>
+    <script src="layer/layer.min.js"></script>
+    <script src="layer/laydate/laydate.js"></script>
+    <script src="mumayi_top/mumayi_top.min.js"></script>
+    <script src="../src/filterMore.js"></script>
+
+    <script>
+        $(function () {
+            initSkuDemo();
+        });
+
+
+        function initSkuDemo() {
+            var options = {
+                //查询事件
+                "search": function (paramList) {
+                    $("#skuDemo_searchbox_param").html('查询参数:' + JSON.stringify(paramList));
+                },
+                //默认展开条件数
+                "expandRow": 2,
+                "isCascade": true,
+                //查询条件
+                "searchBoxs": [
+                    {
+                        "id": "PinPai",
+                        "title": "品牌",
+                        "data": [
+                            { "value": "0", "text": "一叶子" },
+                            { "value": "1", "text": "御泥坊" },
+                            { "value": "2", "text": "美迪惠尔" },
+                            { "value": "3", "text": "丽得姿" },
+                            { "value": "4", "text": "膜法世家" },
+                            { "value": "5", "text": "韩后" },
+                            { "value": "6", "text": "百雀羚" },
+                            { "value": "7", "text": "悦诗风吟" },
+                            { "value": "8", "text": "悦宝莱" },
+                            { "value": "9", "text": "美即" },
+                            { "value": "10", "text": "兰芝" },
+                            { "value": "11", "text": "泊泉雅" },
+                            { "value": "12", "text": "悦宝莱" },
+                            { "value": "13", "text": "韩后" },
+                            { "value": "14", "text": "欧诗漫" },
+                            { "value": "15", "text": "森田" }
+                        ],
+                        "defaults": []                      
+                    },
+                    {
+                        "id": "JiaGe",
+                        "title": "价格",
+                        "data": [
+                            { "value": "0", "text": "0-29" },
+                            { "value": "1", "text": "30-89" },
+                            { "value": "2", "text": "90-179" },
+                            { "value": "3", "text": "180-319" },
+                            { "value": "4", "text": "320-489" },
+                            { "value": "5", "text": "490-1299" },
+                            { "value": "6", "text": "1300以上" }
+                        ]                     
+                    },
+                    {
+                        "id": "XingBie",
+                        "title": "性别",                        
+                        "data": [
+                            { "value": "0", "text": "男" },
+                            { "value": "1", "text": "女" },
+                            { "value": "2", "text": "通用" },
+                            { "value": "3", "text": "其他" }
+                        ]
+                    },
+                    {
+                        "id": "ZheKouLiDu",
+                        "title": "折扣力度",
+                        "data": [
+                            { "value": "0", "text": "无折扣" },
+                            { "value": "1", "text": "9折以上" },
+                            { "value": "2", "text": "8折-8.99折" },
+                            { "value": "3", "text": "7折-7.99折" },
+                            { "value": "4", "text": "6折-6.99折" },
+                            { "value": "5", "text": "6折以下" }
+                        ]
+                    },
+                    {
+                        "id": "ShangPin",
+                        "title": "商品",
+                        "parentId": "|PinPai|XingBie|JiaGe|ZheKouLiDu|",//级联控件ID，一般是上级控件
+                        "data": [
+                            { "value": "0", "text": "一叶子-女-30元-9折", "PinPai": "0", "XingBie": "1", "JiaGe": "1", "ZheKouLiDu": "1"   },
+                            { "value": "1", "text": "森田-男-50元-8折", "PinPai": "15", "XingBie": "0", "JiaGe": "1", "ZheKouLiDu": "2"    },
+                            { "value": "2", "text": "美迪惠尔-100元", "PinPai": "2", "XingBie": "", "JiaGe": "2", "ZheKouLiDu": ""      },
+                            { "value": "3", "text": "膜法世家-7折", "PinPai": "4", "ZheKouLiDu": "3"     }
+                        ],
+                        "fullData": [
+                            { "value": "0", "text": "一叶子-女-30元-9折", "PinPai": "0", "XingBie": "1", "JiaGe": "1", "ZheKouLiDu": "1" },
+                            { "value": "1", "text": "森田-男-50元-8折", "PinPai": "15", "XingBie": "0", "JiaGe": "1", "ZheKouLiDu": "2" },
+                            { "value": "2", "text": "美迪惠尔-100元", "PinPai": "2", "XingBie": "", "JiaGe": "2", "ZheKouLiDu": "" },
+                            { "value": "3", "text": "膜法世家-7折", "PinPai": "4", "ZheKouLiDu": "3" }
+                        ]
+                    }
+                ]
+            };
+            $("#skuDemo_searchbox").fiterMore(options);  
+        }
+
+    </script>
+</body>
+</html>
