@@ -70,6 +70,7 @@ $.extend(String.prototype, {
                                      'event': function (start, end) { }
                                  },
                                  "parentId":"cascadedControlId",//级联控件ID，一般是上级控件
+                                 "containsId":"cascadedAndPartedInChildValueControlId",//级联控件ID，在这个里面的id包含来取值，即子控件中是有多个id拼接成的。
                              }]
                          }
          * 返回值：  无
@@ -175,12 +176,12 @@ $.extend(String.prototype, {
                 item.customSelectd = [];
 
                 //4.是否多选处理,默认为单选
-                if (item.isMultiple == undefined || item.isMultiple.toLowerCase() == "false") {
+                if (item.isMultiple == undefined || item.isMultiple == "false") {
                     item.isMultiple = false;
                 }
 
                 //5.是否显示全部选项
-                if (item.isShowAll == undefined || item.isShowAll.toLowerCase()=="true" ) {
+                if (item.isShowAll == undefined || item.isShowAll== "true") {
                     item.isShowAll = true;
                 }
             });
@@ -241,7 +242,6 @@ $.extend(String.prototype, {
                         state = "select";
                     }
                 }
-
                 //清空自定义查询默认值
                 _clearCustomValue(item);
 
@@ -259,11 +259,7 @@ $.extend(String.prototype, {
                         }
                     }
                     filterSubControls(subControls);
-                    //rebindSubControls(subControls, itemId, item.selected);
                 }
-
-
-
                 //触发查询事件
                 if (typeof (settings.search) == "function" && settings.searchOnSelect) {
                     settings.search(_getParamList());
@@ -333,18 +329,41 @@ $.extend(String.prototype, {
                     subCtl.data = subCtl.fullData.concat();//清除子控件已选条件列表               
                     for (var l = 0; l < settings.searchBoxs.length; l++) {
                         var parentCtrl = settings.searchBoxs[l];
-                        if (parentCtrl.id != subCtl.id) {
-                            var itemId = parentCtrl.id.replace("searchitem_", "");
+                        var itemId = parentCtrl.id.replace("searchitem_", "");
+                        //如果不为当前控件且是当前控件的父控件
+                        if (parentCtrl.id != subCtl.id && subCtl.parentId.indexOf('|' + itemId + '|') >= 0) {
                             var selectedParentIds = parentCtrl.selected;
                             if (!!selectedParentIds && selectedParentIds.length > 0) {
-                                console.log(itemId + ' ' + selectedParentIds);
-                                for (var k = 0; k < subCtl.data.length; k++) {
-                                    console.log("subCtl Parentid " + subCtl.data[k][itemId]);
-                                    if (!!subCtl.data[k][itemId]) {
-                                        if ($.inArray(subCtl.data[k][itemId], selectedParentIds) < 0) {
-                                            console.log(subCtl.data[k]);
-                                            subCtl.data.splice(k, 1);
-                                            k = k - 1;
+                                console.log("父节点编号：" + itemId + "\n\t父节点已选中值：" + selectedParentIds);
+                                //判断子节点的属性值中是否包含父节点的某个已选择项
+                                if (!!subCtl.containsId && subCtl.containsId.indexOf("") >= 0) {
+                                    for (var k = 0; k < subCtl.data.length; k++) {
+                                        if (!!subCtl.data[k][itemId]) {
+                                            var subCtl_parentColumn_k = subCtl.data[k][itemId];
+                                            var contains_q = false;
+                                            for (var q = 0; q < selectedParentIds.length; q++) {
+                                                var parentId_q = selectedParentIds[q];
+                                                if (subCtl_parentColumn_k.indexOf(parentId_q) >= 0) {
+                                                    contains_q = true;
+                                                }
+                                            }
+                                            if (contains_q == false) {
+                                                console.log("被删父节点编号：" + subCtl.data[k][itemId] + "被删除的元素：" + subCtl.data[k].text + subCtl.data[k].value);
+                                                subCtl.data.splice(k, 1);
+                                                k = k - 1;
+                                            }
+                                        }
+                                    }
+                                }
+                                //判断子节点的属性值是否等于父节点的某个已选择项
+                                else {
+                                    for (var k = 0; k < subCtl.data.length; k++) {
+                                        if (!!subCtl.data[k][itemId]) {
+                                            if ($.inArray(subCtl.data[k][itemId], selectedParentIds) < 0) {
+                                                console.log("被删父节点编号：" + subCtl.data[k][itemId] + "被删除的元素：" + subCtl.data[k].text + subCtl.data[k].value);
+                                                subCtl.data.splice(k, 1);
+                                                k = k - 1;
+                                            }
                                         }
                                     }
                                 }
