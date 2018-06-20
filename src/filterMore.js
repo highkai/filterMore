@@ -126,7 +126,9 @@ $.extend(String.prototype, {
 
             //处理数据
             if (isNaN(settings.expandRow) || settings.expandRow < 1) {
-                throw Error("默认展开条件数'expandRow'必须为大于0的整数");
+                settings.expandRow = 2;//默认展开两行得了，报啥错
+                console.log("默认展开条件数'expandRow'必须为大于0的整数,不过程序已经智能地改成两行了。");
+                //throw Error("默认展开条件数'expandRow'必须为大于0的整数");
             } else {
                 if (settings.expandRow > settings.searchBoxs.length) {
                     settings.expandRow = settings.searchBoxs.length;
@@ -173,12 +175,12 @@ $.extend(String.prototype, {
                 item.customSelectd = [];
 
                 //4.是否多选处理,默认为单选
-                if (item.isMultiple == undefined) {
+                if (item.isMultiple == undefined || item.isMultiple.toLowerCase() == "false") {
                     item.isMultiple = false;
                 }
 
                 //5.是否显示全部选项
-                if (item.isShowAll == undefined) {
+                if (item.isShowAll == undefined || item.isShowAll.toLowerCase()=="true" ) {
                     item.isShowAll = true;
                 }
             });
