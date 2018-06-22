@@ -69,6 +69,7 @@ $.extend(String.prototype, {
                                      "isRange": true, //是否区间 默认为true
                                      'event': function (start, end) { }
                                  },
+                                 "isShowAutoComplete":"false",//是否显示自动完成选项，一般选项过多时，可以通过自动完成选项来选中一项。
                                  "parentId":"cascadedControlId",//级联控件ID，一般是上级控件
                                  "containsId":"cascadedAndPartedInChildValueControlId",//级联控件ID，在这个里面的id包含来取值，即子控件中是有多个id拼接成的。
                              }]
@@ -84,7 +85,6 @@ $.extend(String.prototype, {
             var ID_STUFF = "searchitem_";
 
             var searchCtl = this;
-            var filterBtn = $('<div class="filter_btn"><span class="expand">展开条件</span></div>');
 
             var defaults = {
                 //展开更多条件回调事件
@@ -93,6 +93,8 @@ $.extend(String.prototype, {
                 },
                 //默认展开条件数
                 "expandRow": 2,
+                //默认是否展开
+                "isExpand": true,
                 //查询框
                 "searchBoxs": [],
                 //查询事件
@@ -124,7 +126,10 @@ $.extend(String.prototype, {
 
             //查询控件参数
             var settings = $.extend(defaults, options);
-
+            var filterBtn = $('<div class="filter_btn"><span class="expand">展开条件</span></div>');
+            if (settings.isExpand) {
+                filterBtn = $('<div class="filter_btn"><span>收缩条件</span></div>');
+            }
             //处理数据
             if (isNaN(settings.expandRow) || settings.expandRow < 1) {
                 settings.expandRow = 2;//默认展开两行得了，报啥错
@@ -137,7 +142,13 @@ $.extend(String.prototype, {
             }
             //默认展开高度 每行高度40 - 下边框高度1
             var _expandHeight = settings.expandRow * 40 - (settings.expandRow - 1) * 1;
-            searchCtl.css({ 'height': _expandHeight });
+            //如果不是默认展开，则高度为整个高度
+            if (!settings.isExpand || settings.isExpand == "false") {
+                searchCtl.css({ 'height': _expandHeight });
+            }
+            else {
+                searchCtl.css({ 'height': 'auto' });
+            }
 
             $(settings.searchBoxs).each(function (i, item) {
                 //1.id处理
@@ -181,7 +192,7 @@ $.extend(String.prototype, {
                 }
 
                 //5.是否显示全部选项
-                if (item.isShowAll == undefined || item.isShowAll== "true") {
+                if (item.isShowAll == undefined || item.isShowAll == "true") {
                     item.isShowAll = true;
                 }
             });
@@ -397,7 +408,6 @@ $.extend(String.prototype, {
                             }
                         }
                     }
-
                     //重新创建关联子控件
                     _reCreateCtrl(subCtl);
                 }
@@ -446,7 +456,6 @@ $.extend(String.prototype, {
              */
             function _createCtrl() {
                 var strHTML = "";
-
                 $(settings.searchBoxs).each(function (i, item) {
                     strHTML += ('<div class="searchbox-item" {0} data-id="{1}" id="{2}">'.format((i + 1) == settings.searchBoxs.length ? 'style="border: 0"' : "", i, item.id) +
                         '<div class="l" id="{1}_l">{0}<i></i></div>'.format(item.title, item.id) +
